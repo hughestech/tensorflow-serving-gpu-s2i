@@ -7,6 +7,7 @@ ENV CUDA_PATH="/usr/local/cuda"
 ENV PATH="/usr/local/cuda/bin${PATH:+:${PATH}}"
 ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}";
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64/stubs/:$LD_LIBRARY_PATH
+ENV APP_ROOT="/"
 
 LABEL io.k8s.description="Tensorflow serving builder" \
       io.k8s.display-name="tensorflow serving builder" \
