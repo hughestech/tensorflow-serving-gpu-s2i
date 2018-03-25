@@ -50,11 +50,11 @@ COPY ./s2i/bin/ /usr/libexec/s2i
 # Copy extra files to the image.
 COPY ./root/ /
 
-RUN source scl_source enable rh-python36 && \
-    virtualenv ${APP_ROOT} && \
-    chown -R 1001:0 ${APP_ROOT} && \
-    fix-permissions ${APP_ROOT} -P && \
-    rpm-file-permissions
+RUN source scl_source enable rh-python36
+RUN virtualenv ${APP_ROOT}
+RUN chown -R 1001:0 ${APP_ROOT}
+RUN fix-permissions ${APP_ROOT} -P
+RUN rpm-file-permissions
 
 #Drop the root user and make the content of /opt/app-root owned by user 1001
 RUN mkdir -p /opt/app-root/ && chown -R 1001:1001 /opt/app-root
