@@ -47,7 +47,7 @@ set -e
 shopt -s dotglob
 
 echo "---> List permissions"
-ls -ld
+ls -ld /tmp/src/
 
 echo "---> Installing application source ..."
 mv /tmp/src/* ./
