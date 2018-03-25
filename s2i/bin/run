@@ -19,14 +19,63 @@ echo "model_base_path = /opt/app-root/src/"
 
 ls -l /opt/app-root/
 
-export CUDA_HOME="/usr/local/cuda" 
-export CUDA_PATH="${CUDA_HOME}" 
-export PATH="${CUDA_HOME}/bin${PATH:+:${PATH}}" 
-export LD_LIBRARY_PATH="${CUDA_HOME}/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"; 
+export CUDA_HOME="/usr/local/cuda"
+export CUDA_PATH="${CUDA_HOME}"
+export PATH="${CUDA_HOME}/bin${PATH:+:${PATH}}"
+export LD_LIBRARY_PATH="${CUDA_HOME}/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}";
 echo -e “$CUDA_HOME \\n $CUDA_PATH \\n $LD_LIBRARY_PATH”
 
-echo " -----> Run tensorflow server."
+
+
+app_script_check="${APP_SCRIPT-}"
+APP_SCRIPT="${APP_SCRIPT-app.sh}"
+if [[ -f "$APP_SCRIPT" ]]; then
+  echo "---> Running application from script ($APP_SCRIPT) ..."
+  if [[ "$APP_SCRIPT" != /* ]]; then
+    APP_SCRIPT="./$APP_SCRIPT"
+  fi
+  exec "$APP_SCRIPT"
+else
+  test -n "$app_script_check" && (>&2 echo "ERROR: file '$app_script_check' not found.") && exit 1
+fi
+
+app_file_check="${APP_FILE-}"
+APP_FILE="${APP_FILE-app.py}"
+if [[ -f "$APP_FILE" ]]; then
+  echo "---> Running application from Python script ($APP_FILE) ..."
+  exec python "$APP_FILE"
+else
+  test -n "$app_file_check" && (>&2 echo "ERROR: file '$app_file_check' not found.") && exit 1
+fi
+
+APP_HOME=${APP_HOME:-.}
+# Look for 'manage.py' in the directory specified by APP_HOME, or the current direcotry
+manage_file=$APP_HOME/manage.py
+
+if should_migrate; then
+  if [[ -f "$manage_file" ]]; then
+    echo "---> Migrating database ..."
+    python "$manage_file" migrate --noinput
+  else
+    echo "WARNING: seems that you're using Django, but we could not find a 'manage.py' file."
+    echo "Skipped 'python manage.py migrate'."
+  fi
+fi
+
+if is_gunicorn_installed; then
+  if [[ -z "$APP_MODULE" ]]; then
+    # Look only in the directory specified by APP_HOME, or the current directory
+    # replace all "/" with ".", remove leading "." and ".py" suffix
+    APP_MODULE=$(find $APP_HOME -maxdepth 1 -type f -name 'wsgi.py' | sed 's:/:.:g;s:^\.\+::;s:\.py$::')
+  fi
+
+  if [[ -z "$APP_MODULE" && -f setup.py ]]; then
+    APP_MODULE="$(python setup.py --name)"
+  fi
+
+fi
+
+#echo " -----> Run tensorflow server."
 
 #binary gets copied to  /opt/app-root/src/tf/tensorflow_model_server
-/opt/app-root/src/tf/tensorflow_model_server --port=6006 --model_name=$MODEL_NAME --model_base_path=/opt/app-root/src/$MODEL_PATH
-
+#/opt/app-root/src/tf/tensorflow_model_server --port=6006 --model_name=$MODEL_NAME --model_base_path=/opt/app-root/src/$MODEL_PATH
