@@ -52,7 +52,7 @@ COPY ./s2i/bin/ /usr/libexec/s2i
 COPY ./root/ /
 
 #RUN source scl_source enable rh-python36
-RUN virtualenv ${APP_ROOT}
+#RUN virtualenv ${APP_ROOT}
 RUN chown -R 1001:0 ${APP_ROOT}
 RUN fix-permissions ${APP_ROOT} -P
 RUN rpm-file-permissions
